@@ -1,0 +1,9 @@
+*.jld
+*.md
+*.swp
+*.md
+*.yml
+NSE_README.txt
+/output
+/plots
+/src_non_parallel
