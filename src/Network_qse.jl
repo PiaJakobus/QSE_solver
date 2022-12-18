@@ -51,7 +51,7 @@ function solve_NSE(yrange::Array{Float64,1}, trange::Array{Float64,1}, rrange::A
         write(f, "# cgs units - rho = const = $(rrange[1]) g/cm3\n")
         write(f, "# load data in variable with load(\"data.jld\")[\"data\"]\n")
         write(f, "# load parameters with load(\"data.jld\")[\"yrange\"]\n")
-        write(f, "# y-range, T-range, rho-range,  clust-Range\n")
+        write(f, "# y-range $(size(yrange)), T-range $(size(trange)), rho-range $(size(rrange)),  s-range $(size(srange))\n")
         writedlm(f, [yrange, "\n",  trange, "\n", rrange, "\n", srange])
     end
     return res, srange
@@ -93,7 +93,7 @@ function parallel_NSE(i::Int64, yrange::Array{Float64,1}, trange::Array{Float64,
         write(f, "# cgs units - rho = const = $(rrange[1]) g/cm3\n")
         write(f, "# load data in variable with load(\"data.jld\")[\"data\"]\n")
         write(f, "# load parameters with load(\"data.jld\")[\"yrange\"]\n")
-        write(f, "# y-range, T-range, rho-range,  clust-Range\n")
+        write(f, "# y-range $(size(yrange)), T-range $(size(trange)), rho-range $(size(rrange)),  s-range $(size(srange))\n")
         writedlm(f, [yrange, "\n",  trange, "\n", rrange, "\n", srange])
     end
     return res, srange
@@ -148,7 +148,7 @@ function parallel_QSE(ARGS, yrange::Array{Float64,1}, trange::Array{Float64,1}, 
                     	#write(f, "# cgs units - rho = const = $(rrange[1]) g/cm3\n")
                     	write(f, "# load data in variable with load(\"data.jld\")[\"data\"]\n")
                     	write(f, "# load parameters with load(\"data.jld\")[\"yrange\"]\n")
-                    	write(f, "# y-range, T-range, rho-range,  s-range\n")
+                    	write(f, "# y-range $(size(yrange)), T-range $(size(trange)), rho-range $(size(rrange)),  s-range $(size(srange))\n")
                     	writedlm(f, [yrange, "\n",  t, "\n", r, "\n", srange])
                     end
  
@@ -195,7 +195,7 @@ function solve_QSE(yrange::Array{Float64,1}, trange::Array{Float64,1}, rrange::A
         write(f, "# cgs units - rho = const = $(rrange[1]) g/cm3\n")
         write(f, "# load data in variable with load(\"data.jld\")[\"data\"]\n")
         write(f, "# load parameters with load(\"data.jld\")[\"yrange\"]\n")
-        write(f, "# y-range, T-range, rho-range,  clust-Range\n")
+        write(f, "# y-range $(size(yrange)), T-range $(size(trange)), rho-range $(size(rrange)),  s-range $(size(srange))\n")
         writedlm(f, [yrange, "\n",  trange, "\n", rrange, "\n", 1.0 .- 10.0.^(srange)])
     end
     return res, 1.0 .- 10.0.^(srange)

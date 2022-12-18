@@ -46,11 +46,9 @@ function species_str(a_i)
     return x, y
 end
 
-species_str(a[55])
 
-length("hi")
 
-mutable struct NSE end
+#mutable struct NSE end
 
 @recipe function f(::NSE, n::Integer, el::Integer, range::Vector, xaxis::String,
                     yVal::Array, customcolor = :green; add_marker = true)
@@ -79,7 +77,7 @@ end
 
 
 
-nse = NSE()
+#nse = NSE()
 elem = [1,2,3, 6,762,764,772,774,660,661,664,710,563,565,470,997,884]
 
 col = shuffle(shuffle(Base.range(colorant"green", stop=colorant"red", length=size(a,1))))
@@ -92,15 +90,16 @@ col = distinguishable_colors(size(a,1), [RGB(1,1,1), RGB(0,0,0)], dropseed=true)
 
 shuffle!(col)
 
+
 animY = @animate for i ∈ reverse(2:size(trange,1)) # timeframes T
     Plots.plot()
     annotate!(yrange[30], 1.2, Plots.text(lpad(string(round(trange[i]; sigdigits = 2, base = 10)),5)*" K", 22, "black"))
     annotate!(yrange[10], 1.2, Plots.text(string(round(rrange[1]; sigdigits = 2, base = 10))*" g/cm³", 22, "black"))
     for (k, el) in enumerate(a)
-        ind = argmax(nse_table[k,:,i,1])
-        if nse_table[k,:,i,1][ind] > 0.001
-            #plot!(nse_table,i, k, yrange, "Yₑ", nse_table[k,:,i,1], colT[rand(1:30)], marker = (:circle,2),
-            Plots.plot!(yrange, nse_table[k,:,i,1],
+        ind = argmax(nse[k,:,i,1])
+        if nse[k,:,i,1][ind] > 0.001
+            #plot!(nse,i, k, yrange, "Yₑ", nse[k,:,i,1], colT[rand(1:30)], marker = (:circle,2),
+            Plots.plot!(yrange, nse[k,:,i,1],
             yaxis = :log,
             lw = 4,
             label = false,
@@ -119,11 +118,11 @@ animY = @animate for i ∈ reverse(2:size(trange,1)) # timeframes T
             thickness_scaling = 1.3,
             margin=5Plots.mm)
             x,y = species_str(a[k])
-            if nse_table[k,:,i,1][ind] > 0.001 && nse_table[k,:,i,1][ind] < 0.01
-                annotate!(yrange[ind], 1.2*nse_table[k,:,i,1][ind],
+            if nse[k,:,i,1][ind] > 0.001 && nse[k,:,i,1][ind] < 0.01
+                annotate!(yrange[ind], 1.2*nse[k,:,i,1][ind],
                 Plots.text(L"{}^{%$y}\!\textrm{%$x}", 15, col[k]))
             else
-                annotate!(yrange[ind], 1.2*nse_table[k,:,i,1][ind],
+                annotate!(yrange[ind], 1.2*nse[k,:,i,1][ind],
                 Plots.text(L"{}^{%$y}\!\textrm{%$x}", 20, col[k]))
             end
         end
@@ -134,22 +133,24 @@ gif(animY, "output/y_evol_2.gif", fps = 12)
 
 
 
-
+"""
+This plots X_i vs temperature as evolution of electron fraction at constant rho
+"""
 animT = @animate for i ∈ reverse(1:size(yrange,1)) # timeframes Y
     Plots.plot()
     annotate!(trange[30], 1.2,Plots.text(rpad(string(round(yrange[i]; sigdigits = 3, base = 10)), 5, '0')*" Yₑ", 22, "black"))
     annotate!(trange[10], 1.2, Plots.text(string(round(rrange[1]; sigdigits = 2, base = 10))*" g/cm³", 22, "black"))
     for (k,el) in enumerate(a)
-        ind = argmax(nse_table[k,i,:,1])
-        if nse_table[k,i,:,1][ind] > 0.001
-            #plot!(nse,i, k, yrange, "Yₑ", nse_table[k,:,i,1], colT[rand(1:30)], marker = (:circle,2),
-            plot!(trange, nse_table[k,i,:,1],
+        ind = argmax(nse[k,i,:,1])
+        if nse[k,i,:,1][ind] > 0.001
+            #plot!(nse,i, k, yrange, "Yₑ", nse[k,:,i,1], colT[rand(1:30)], marker = (:circle,2),
+            plot!(trange, nse[k,i,:,1],
             yaxis = :log,
             alpha = 1,
             fontfamily = :Courier,
             lw = 4,
             label = false,
-            ylims = (1e-6, 1.5),
+            ylims = (1e-3, 1.5),
             yticks = ([1e-3, 1e-2, 1e-1, 1], ["10⁻³", "10⁻²", "10⁻¹", "1"]),
             size = (1920,1380),
             xlabel = "T [K]",
@@ -165,17 +166,16 @@ animT = @animate for i ∈ reverse(1:size(yrange,1)) # timeframes Y
             thickness_scaling = 1.3,
             margin=5Plots.mm)
             x,y = species_str(a[k])
-            if nse_table[k,i,:,1][ind] > 0.001 && nse_table[k,i,:,1][ind] < 0.01
-                annotate!(trange[ind], 1.2*nse_table[k,i,:,1][ind],
+            if nse[k,i,:,1][ind] > 0.001 && nse[k,i,:,1][ind] < 0.01
+                annotate!(trange[ind], 1.2*nse[k,i,:,1][ind],
                 Plots.text(L"{}^{%$y}\!\textrm{%$x}", 15, col[k]))
             else
-                annotate!(trange[ind], 1.2*nse_table[k,i,:,1][ind],
+                annotate!(trange[ind], 1.2*nse[k,i,:,1][ind],
                 Plots.text(L"{}^{%$y}\!\textrm{%$x}", 20, col[k]))
             end
         end
     end
 end
-
 
 
 gif(animT, "output/temperature_evol2.gif", fps = 9)

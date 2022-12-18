@@ -1,29 +1,6 @@
 
 a = Network_qse.extract_partition_function()
 
-qse = load("/home/../../media/user1/My Passport/Network_qse/src/output/r1/t1/QSE_table.jld")["data"]
-nse = load("..//Network_qse_run1/NSE_higher_QSE/logScale/NSE_table.jld")["data"]
-params_qse = load("../Network_qse_run1/NSE_higher_QSE/logScale/QSE_params.jld")
-params_nse = load("../Network_qse_run1/NSE_higher_QSE/logScale/NSE_params.jld")
-
-qse = load("/home/../../media/user1/My Passport/Network_qse/src/output/r1/t1/QSE_table.jld")["data"]
-params_qse = load("/home/../../media/user1/My Passport/Network_qse/src/output/r1/t1/params.jld")
-
-params_qse = load("../Network_qse/y0/QSE_params.jld")
-qse = load("../Network_qse/QSE_table.jld")["data"]
-
-
-
-qse = load("../Network_qse_run1/qse_tables/vary_R/QSE_table.jld")["data"]
-qse = load("../Network_qse_run1/NSE_higher_QSE/error/QSE_table.jld")["data"]
-nse_alt = load("../Network_qse_run1/qse_tables/vary_R/NSE_table.jld")["data"]
-params_qse = load("../Network_qse_run1/qse_tables/vary_R/QSE_params.jld")
-params_nse_alt = load("../Network_qse_run1/qse_tables/vary_R/NSE_params2.jld")
-params_qse = load("../Network_qse_run1/NSE_higher_QSE/error/QSE_params.jld")
-
-
-
-print(qse[Network_qse.find_el("Fe56", a),1,:,1,2])
 
 Plots.plot(cl_qse, qse[Network_qse.find_el("H1", a),10,1,1,:],yscale =:log10)
 Plots.plot!(cl_qse, qse[Network_qse.find_el("1n", a),10,1,1,:],yscale =:log10)
@@ -169,6 +146,170 @@ mutable struct NSE end
     range, yVal
 end
 
+function species_str(a_i)
+    if a_i.name == "1n"
+        x = "n"
+        y = "1"
+    elseif a_i.name == "H1"
+        x = "H"
+        y = "1"
+    elseif a_i.name == "H2"
+        x = "H"
+        y = "2"
+    elseif a_i.name == "H3"
+        x = "H"
+        y = "3"
+    elseif a_i.name == "He3"
+        x = "He"
+        y = "3"
+    elseif a_i.name == "He4"
+        x = "He"
+        y = "4"
+    elseif length(a_i.name) == 4.0
+        y = a_i.name[3:4]
+        x = a_i.name[1:2]
+    else
+        y = a_i.name[2:3]
+        x = a_i.name[1]
+    end
+    return x, y
+end
+
+
+col = distinguishable_colors(size(a,1), [RGB(1,1,1), RGB(0,0,0)], dropseed=true)
+
+shuffle!(col)
+
+
+"""
+This plots X_i vs Y_e as evolution of temperature at constant rho,cluster 
+"""
+animY = @animate for i ∈ reverse(2:size(trange,1)) # timeframes T
+    Plots.plot()
+    annotate!(yrange[30], 1.2, Plots.text("T="*lpad(string(round(trange[i]; sigdigits = 2, base = 10)),5)*" K", 22, "black"))
+    annotate!(yrange[10], 1.2, Plots.text(L"\rho="*string(round(rrange[1]; sigdigits = 2, base = 10))*" g/cm³", 22, "black"))
+    annotate!(yrange[end-10], 1.2, Plots.text(L"X_\textrm{Cl}="*string(round(srange[1]; sigdigits = 4, base = 10)), 22, "black"))
+    for (k, el) in enumerate(a)
+        ind = argmax(qse[k,:,i,1,1])
+        ind_nse = argmax(nse[k,:,i,1])
+        if qse[k,:,i,1,1][ind] > 0.001
+            Plots.plot!(yrange, qse[k,:,i,1,1],
+            yaxis = :log,
+            lw = 4,
+            label = false,
+            ylims = (1e-3, 1.5),
+            yticks = ([1e-3, 1e-2, 1e-1, 1], ["10⁻³", "10⁻²", "10⁻¹", "1"]),
+            size = (1920,1380),
+            xlabel = "Yₑ",
+            ylabel = "Xᵢ",
+            c = col[k],
+            #marker = (:circle,2),
+            #markercolor = "white",
+            linewidth = 2,
+            guidefont=font(23),
+            xtickfont = font(16),
+            ytickfont = font(16),
+            thickness_scaling = 1.3,
+            margin=5Plots.mm)
+            x,y = species_str(a[k])
+            if qse[k,:,i,1,1][ind] > 0.001 && qse[k,:,i,1,1][ind] < 0.01
+                annotate!(yrange[ind], 1.2*qse[k,:,i,1,1][ind],
+                Plots.text(L"{}^{%$y}\!\textrm{%$x}", 15, col[k]))
+            else
+                annotate!(yrange[ind], 1.2*qse[k,:,i,1,1][ind],
+                Plots.text(L"{}^{%$y}\!\textrm{%$x}", 20, col[k]))
+            end
+        end
+        if true
+        if nse[k,:,i,1][ind_nse] > 0.01
+            plot!(yrange, nse[k,:,i,1],
+            linewidth = 1,
+            linestyle=:dash, 
+            label = false,
+            c="grey")
+            x,y = species_str(a[k])
+            if nse[k,:,i,1][ind_nse] > 0.001 && nse[k,:,i,1][ind_nse] < 0.01
+                annotate!(yrange[ind_nse], 1.2*nse[k,:,i,1][ind_nse],
+                Plots.text(L"{}^{%$y}\!\textrm{%$x}", 10, "grey"))
+            else
+                annotate!(yrange[ind_nse], 1.2*nse[k,:,i,1][ind_nse],
+                Plots.text(L"{}^{%$y}\!\textrm{%$x}", 10, "grey"))
+            end
+        end 
+        end 
+
+    end
+end
+gif(animY, "output/t_evol_qse.mp4",fps=12)
+
+
+"""
+This plots X_i vs temperature as evolution of electron fraction at constant rho, si-cluster!
+"""
+animT = @animate for i ∈ reverse(1:size(yrange,1)) # timeframes Y
+    Plots.plot()
+    annotate!(trange[30], 1.2,Plots.text(L"Y_\textrm{e}="*rpad(string(round(yrange[i]; sigdigits = 3, base = 10)), 5, '0'), 22, "black"))
+    annotate!(trange[10], 1.2, Plots.text(L"\rho="*string(round(rrange[1]; sigdigits = 2, base = 10))*" g/cm³", 22, "black"))
+    annotate!(trange[end-10], 1.2, Plots.text(L"X_\textrm{Cl}="*string(round(srange[1]; sigdigits = 4, base = 10)), 22, "black"))
+    for (k,el) in enumerate(a)
+        ind = argmax(qse[k,i,:,1,1])
+        ind_nse = argmax(nse[k,i,:,1])
+        if qse[k,i,:,1][ind] > 0.001
+            #plot!(nse,i, k, yrange, "Yₑ", qse[k,:,i,1], colT[rand(1:30)], marker = (:circle,2),
+            plot!(trange, qse[k,i,:,1,1],
+            yaxis = :log,
+            alpha = 1,
+            fontfamily = :Courier,
+            lw = 4,
+            label = false,
+            ylims = (1e-3, 1.5),
+            yticks = ([1e-3, 1e-2, 1e-1, 1], ["10⁻³", "10⁻²", "10⁻¹", "1"]),
+            size = (1920,1380),
+            xlabel = "T [K]",
+            ylabel = "Xᵢ",
+            c = col[k],
+            #c = colT[rand(1:30)],
+            #marker = (:circle,2),
+            #markercolor = "white",
+            linewidth = 2,
+            guidefont=font(23),
+            xtickfont = font(16),
+            ytickfont = font(16),
+            thickness_scaling = 1.3,
+            margin=5Plots.mm)
+            x,y = species_str(a[k])
+
+            if qse[k,i,:,1,1][ind] > 0.001 && qse[k,i,:,1,1][ind] < 0.01
+                annotate!(trange[ind], 1.2*qse[k,i,:,1,1][ind],
+                Plots.text(L"{}^{%$y}\!\textrm{%$x}", 15, col[k]))
+            else
+                annotate!(trange[ind], 1.2*qse[k,i,:,1,1][ind],
+                Plots.text(L"{}^{%$y}\!\textrm{%$x}", 20, col[k]))
+            end
+        end
+        if true
+        if nse[k,i,:][ind_nse] > 0.01
+            plot!(trange, nse[k,i,:,1],
+            linewidth = 1,
+            linestyle=:dash, 
+            label = false,
+            c="grey")
+            x,y = species_str(a[k])
+            if nse[k,i,:,1][ind_nse] > 0.001 && nse[k,i,:,1][ind_nse] < 0.01
+                annotate!(trange[ind_nse], 1.2*nse[k,i,:,1][ind_nse],
+                Plots.text(L"{}^{%$y}\!\textrm{%$x}", 10, "grey"))
+            else
+                annotate!(trange[ind_nse], 1.2*nse[k,i,:,1][ind_nse],
+                Plots.text(L"{}^{%$y}\!\textrm{%$x}", 10, "grey"))
+            end
+        end 
+        end 
+    end
+end
+gif(animT, "output/temperature_evol_qse.mp4", fps = 7)
+
+
+
 
 
 #col = shuffle(shuffle(Base.range(colorant"green", stop=colorant"red", length=size(a,1))))
@@ -177,42 +318,54 @@ end
 ##col = shuffle(shuffle(Base.range(HSV(0,1,1), stop=HSV(-360,1,1),length=size(a,1))))
 #col = shuffle(shuffle(Base.range(HSV(0,1,1), stop=HSV(-360,1,1),length=size(a,1))))
 
-col = distinguishable_colors(size(a,1), [RGB(1,1,1), RGB(0,0,0)], dropseed=true)
+col = distinguishable_colors(size(a,1)-100, [RGB(1,1,1), RGB(0,0,0)], dropseed=true)
+
+shuffle!(col)
 shuffle!(col)
 
-
-
+"""
+This plots X_i vs temperature as evolution of silicon cluster size at constant rho, Y_e and 
+shows NSE abundances (fixed) in the background. Good for showing differences QSE/NSE
+"""
 animY = @animate for i ∈ reverse(1:size(cl_qse,1)-1) # timeframes T
     println(i)
     Plots.plot()
-
-    for (k, el) in zip(Iterators.countfrom(3), a[3:end])#for (k, el) in enumerate(a[3:end])
+    if nse_on
+    for (k, el) in enumerate(a[1:end-2]) #zip(Iterators.countfrom(3), a[3:end])
         #println(k, el)
         ind = argmax(filter!(!isnan, nse[k,1,:,1]))
-        if nse[k,1,:,1][ind] > 0.01
-            plot!(trange, nse[k, 1, :, 1], label = nothing, color = "grey", yaxis = :log)
+        if nse[k,1,:,1][ind] > 1e-3
+            plot!(trange, nse[k, 1, :, 1], linestyle=:dash,label = nothing, color = "grey", yaxis = :log)
             x,y = species_str(a[k])
-
-            annotate!(trange[ind], 1.2*nse[k,1,:,1][ind], Plots.text(L"{}^{%$y}\!\textrm{%$x}", 25, "grey"))
+            if nse[k,1,:,1][ind] > 1e-3 && nse[k,1,:,1][ind] < 1e-2
+                annotate!(trange[ind], 1.2*nse[k,1,:,1][ind],
+                Plots.text(L"{}^{%$y}\!\textrm{%$x}", 15, "grey"))
+            else
+                annotate!(trange[ind], 1.2*nse[k,1,:,1][ind],
+                Plots.text(L"{}^{%$y}\!\textrm{%$x}", 20, "grey"))
+            end
         end
     end
+    #Plots.plot!(trange, nse[1,1,:,1]+nse[2,1,:,1], c = "red", label = "NSE p + n", ls=:dot,legendfontsize=12)
     ind = argmax(filter!(!isnan, qse[1,1,:,1,i]))
-    ind = argmax(filter!(!isnan, qse[1,1,:,1,i]))
-    Plots.plot!(trange, qse[1,1,:,1, i]+qse[2,1,:,1, i], c = "red", label = "QSE p + n",ls=:dashdot,legendfontsize=12)
-    Plots.plot!(trange, nse[1,1,:,1]+nse[2,1,:,1], c = "grey", label = "NSE p + n", ls=:dashdot,legendfontsize=12)
-    ##annotate!(trange[50], 1.2, Plots.text(L"\log\,(1 - \mathrm{X}_{\mathrm{Cl}}) \;\; = ", 19, "black"))
+    end 
+    #Plots.plot!(trange, qse[1,1,:,1, i]+qse[2,1,:,1, i], c = "red")  
+    #fg_legend = :false,label = "QSE p + n",legendfontsize=12,legend=:topleft)
+    #annotate!(trange[50], 1.2, Plots.text(L"\log\,(1 - \mathrm{X}_{\mathrm{Cl}}) \;\; = ", 19, "black"))
     #annotate!(trange[50], 0.9, Plots.text(L"\overline{\mathrm{X}}_{\mathrm{NSE}} \;\;\;\;\; = ", 19, "black"))
     #annotate!(trange[50], 0.7, Plots.text(L"\mathrm{X}_\mathrm{Cl}/\overline{\mathrm{X}}_\mathrm{NSE} = ", 19, "black"))
-    annotate!(trange[37], 1.2, Plots.text("X = "*lpad(rpad(string(round(cl_qse[i]; sigdigits = 7, base = 10)),4), 1), 19, "black"))
     #annotate!(trange[40], 0.9, Plots.text(lpad(rpad(string(round(mean(cl_nse[i]); sigdigits = 2, base = 10)),4), 4), 19, "black"))
     #annotate!(trange[40], 0.7, Plots.text(lpad(rpad(string(round(cl_qse[i]/mean(cl_nse[i]); sigdigits = 2, base = 10)),4), 4), 19, "black"))
-
-    annotate!(trange[90], 1.2, Plots.text(string(round(rrange[1]; sigdigits = 2, base = 10))*" g/cm³", 19, "black"))
+    ratio = cl_qse[i]/cl_nse[i]
+    annotate!(trange[32], 1.2, Plots.text(L"X_\textrm{Cl} = "*lpad(rpad(string(round(cl_qse[i]; sigdigits = 3, base = 10)),4), 1)*L"\,\,\,\,X_\textrm{Cl}/X^\textrm{NSE}_\textrm{Cl}: "*lpad(rpad(string(round(ratio; sigdigits = 3, base = 10)),4), 1), 19, "black"))
+    annotate!(trange[end-10], 1.2, Plots.text(L"\rho="*string(round(rrange[1]; sigdigits = 2, base = 10))*" g/cm³", 19, "black"))
+    annotate!(trange[5], 1.2, Plots.text(L"Y_\textrm{e}="*string(round(yrange[1]; sigdigits = 2, base = 10)), 19, "black"))
     #annotate!(trange[end - 5], 1.2*(qse[1,1,:,1, i]+qse[2,1,:,1, i]), Plots.text(L"n + p", 15, "red"))
     #annotate!(trange[end - 5], 1.2*(nse[1,1,:,1]+nse[2,1,:,1]),Plots.text(L"n + p", 15, "grey"))
-    for (k, el) in zip(Iterators.countfrom(3), a[3:end]) #enumerate(a[3:end])
+    #np = argmax(filter!(!isnan, qse[1,1,:,1,i]+qse[2,1,:,1,i]))
+    for (k, el) in enumerate(a[1:end])#zip(Iterators.countfrom(3), a[3:end]) 
         ind = argmax(filter!(!isnan, qse[k,1,:,1,i]))
-        if qse[k,1,:,1,i][ind] > 0.01
+        if qse[k,1,:,1,i][ind] > 1e-3
             #plot!(nse,i, k, yrange, "Yₑ", all[k,:,i,1], colT[rand(1:30)], marker = (:circle,2),
             Plots.plot!(trange, qse[k,1,:,1, i],
             yaxis = :log,
@@ -233,10 +386,12 @@ animY = @animate for i ∈ reverse(1:size(cl_qse,1)-1) # timeframes T
             thickness_scaling = 1.3,
             margin=5Plots.mm)
             x,y = species_str(a[k])
-            if qse[k,1,:,1, i][ind] > 0.001 && qse[k,1,:,1, i][ind] < 0.01
+            if qse[k,1,:,1, i][ind] > 1e-3 && qse[k,1,:,1, i][ind] < 1e-2
+                #annotate!(trange[np], 1.2*qse[k,1,:,1, i][np], Plots.text("QSE p+n", 15, "red"))
                 annotate!(trange[ind], 1.2*qse[k,1,:,1, i][ind],
                 Plots.text(L"{}^{%$y}\!\textrm{%$x}", 15, col[k]))
             else
+                #annotate!(trange[np], 1.2*qse[k,1,:,1, i][np], Plots.text("QSE p+n", 20, "red"))
                 annotate!(trange[ind], 1.2*qse[k,1,:,1, i][ind],
                 Plots.text(L"{}^{%$y}\!\textrm{%$x}", 20, col[k]))
             end
@@ -244,4 +399,4 @@ animY = @animate for i ∈ reverse(1:size(cl_qse,1)-1) # timeframes T
     end
 end
 
-gif(animY, "../Network_qse_run1/NSE_higher_QSE/logScale12/x_cl_evol_2.mp4", fps = 7)
+gif(animY, "output/x_cl_evol_2.mp4", fps = 9)
