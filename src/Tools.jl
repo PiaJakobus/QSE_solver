@@ -25,6 +25,7 @@ function inv_3x3(m::Array{Float64,2})
         [m[2,2]*m[3,3]-m[2,3]*m[3,2] m[1,3]*m[3,2]-m[1,2]*m[3,3] m[1,2]*m[2,3]-m[1,3]*m[2,2];
          m[2,3]*m[3,1]-m[2,1]*m[3,3] m[1,1]*m[3,3]-m[1,3]*m[3,1] m[1,3]*m[2,1]-m[1,1]*m[2,3];
          m[2,1]*m[3,2]-m[2,2]*m[3,1] m[1,2]*m[3,1]-m[1,1]*m[3,2] m[1,1]*m[2,2]-m[1,2]*m[2,1]]
+    #any(isnan.(m⁻¹)) ? m⁻¹ = pinv(m) : nothing
     return m⁻¹
 end
 
@@ -44,15 +45,30 @@ function MultiNewtonRaphson(x::Array{Float64,1}, func::Func, th::ThermoPropertie
     zaehler = 0
     ϵ = 1.0
     while (abs(ϵ) > 1e-12) && (zaehler < 10000)
-        #println(x)
         f = func.f(x)
+	#println("--- i\t",zaehler,"\n")
+	#println("func\t",f,"\n")
+	#println("test")
         inv = func.inv(x)
+        #println("det\t", m,pinv(m))
         α = props.alpha
         maxi = props.max
         mini = props.min
         x = x .- min.(1, zaehler/α) * max.(min.(inv * f, maxi), mini)
+        #println("guess\t",x,"\t","error ",ϵ)
         ϵ = LinearAlgebra.norm2(f)
         zaehler += 1
     end
     return x
+
+"""
+    restmass(xi::Array{Float64,1}, ap::Array{Network_qse.AtomicProperties, 1},rho)
+computes restmass for fixed rho,ye,temp
+if array of different thermoprops desired use sth like:
+map(k->restmass(qse[:,1,k,1,1],a,1e8),collect(1:length(trange)))
+"""
+function restmass(xi::Array{Float64,1}, ap::Array{Network_qse.AtomicProperties, 1},rho)
+    return sum((rho .* xi ./ m_by) .* ((map(k->k.M,ap) .* meverg ./ map(k->k.A,ap)) .+ map(k->k.Z,a) .* m_e .* c^2))
+end
+
 end

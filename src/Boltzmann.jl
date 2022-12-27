@@ -145,7 +145,9 @@ function qse_condition(μ::Array{Float64,1}, th::ThermoProperties,
             factor_i = [1.0, apᵢ.Z / apᵢ.A]
             res .= (pr_i .* factor_i .* exp_i) .+ res
         end
+	#ap_qse = ap[map(k -> (k.A <= 62) && (k.A >= 28),apᵢ)]
         for (in, apᵢ) in enumerate(ap[i_c12+1:end])
+        #for (in, apᵢ) in enumerate(ap_qse)
             pr_i = prefactor(apᵢ)(th)
             exp_i_si = exp((μ[1] * (apᵢ.Z - 14) + μ[2] * ((apᵢ.A -apᵢ.Z) -14) + μ[3] - (apᵢ.Eb .+ E_si)) / (kmev * th.T))
             factor_i = [1.0, apᵢ.Z / apᵢ.A]
@@ -155,9 +157,38 @@ function qse_condition(μ::Array{Float64,1}, th::ThermoProperties,
         sol[1] = log(res[1] + res_si[1])
         #println(res[1], res_si[1])
         sol[3] = log(res_si[1] / th.x_qse)
+	println("test\t",μ,"\t", sol)
         return sol
 end
 
+
+function qse_condition_scalar(μ::Array{Float64,1}, th::ThermoProperties,
+            ap::Array{AtomicProperties, 1}, E_si = -236.533, i_c12 = find_el("C12", ap))
+        res = zeros(Real,2) # Real here for AtoDiff to work
+        res_si = zeros(Real, 2)
+        sol = zeros(Real, 3)
+        for (in, apᵢ) in enumerate(ap[1:i_c12])
+            pr_i = prefactor(apᵢ)(th)
+            exp_i = exp((μ[1] * apᵢ.Z + μ[2] *
+                    (apᵢ.A -apᵢ.Z) - apᵢ.Eb) / (kmev * th.T))
+            factor_i = [1.0, apᵢ.Z / apᵢ.A]
+            res .= (pr_i .* factor_i .* exp_i) .+ res
+        end
+	#ap_qse = ap[map(k -> (k.A <= 62) && (k.A >= 28),apᵢ)]
+        for (in, apᵢ) in enumerate(ap[i_c12+1:end])
+        #for (in, apᵢ) in enumerate(ap_qse)
+            pr_i = prefactor(apᵢ)(th)
+            exp_i_si = exp((μ[1] * (apᵢ.Z - 14) + μ[2] * ((apᵢ.A -apᵢ.Z) -14) + μ[3] - (apᵢ.Eb .+ E_si)) / (kmev * th.T))
+            factor_i = [1.0, apᵢ.Z / apᵢ.A]
+            res_si .= (pr_i .* factor_i .* exp_i_si) .+ res_si
+        end
+        sol[2] = (res[2] + res_si[2]) / (res[1] + res_si[1]) - th.y
+        sol[1] = log(res[1] + res_si[1])
+        #println(res[1], res_si[1])
+        sol[3] = log(res_si[1] / th.x_qse)
+	println("test scalar\t",μ,"\t",sol[1]^2 + sol[2]^2 + sol[3]^2)
+        return LinearAlgebra.norm2(sol)
+end
 
 
 

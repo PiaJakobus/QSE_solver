@@ -38,6 +38,12 @@ function solve_NSE(yrange::Array{Float64,1}, trange::Array{Float64,1}, rrange::A
                 ff = Network_qse.Func(2, x -> Network_qse.nse_condition(x, th, a), x -> Network_qse.df_nse_condition(x,th,a), false)
                 any(isnan.(tmp)) ? tmp = Network_qse.initial_guess(a) : nothing
                 tmp = Network_qse.MultiNewtonRaphson(tmp, ff, th, a, sp)
+println("***** tmp\t", tmp)
+                if any(isnan,tmp) 
+println("yes loop")
+			prob = OptimizationProblem(x -> Network_qse.nse_condition(x, th, a),Network_qse.initial_guess(a))
+			tmp = solve(prob, NelderMead())
+                end 
                 res[:,i,j,k] = Network_qse.x_i(tmp, th, a)
                 srange[j] = sum(res[:,i,j,k][c12:end])
                 println(">>>> ", j, " ", " sum ",sum(res[:,i,j,k]))
@@ -161,30 +167,47 @@ end
 #parallel_QSE(ARGS, collect(LinRange(0.5,0.497,5)), collect(LinRange(4.6e9, 4.4e9, 5)), collect(LinRange(1e8, 7.12e8, 16)), collect(LinRange(-1.5, -1.75, 5)));
 #parallel_QSE(ARGS, collect(LinRange(0.5,0.47,75)), collect(LinRange(5e9, 3e9, 75)), collect(LinRange(1e8, 1e9, 64)), collect(LinRange(-1.5, -4, 75)));
 
+#parallel_QSE(ARGS, collect(LinRange(0.5,0.47,75)), collect(LinRange(6.5e9, 3e9, 75)), collect(LinRange(1e7, 1e9, 75)), collect(LinRange(-1.5, -4, 75)));
 
 function solve_QSE(yrange::Array{Float64,1}, trange::Array{Float64,1}, rrange::Array{Float64,1}, srange::Array{Float64,1})
     a = Network_qse.extract_partition_function()
     res = Array{Float64, 5}(undef, size(a,1), size(yrange, 1), size(trange, 1), size(rrange, 1), size(srange, 1))
     res_mu = Array{Float64, 5}(undef, 3, size(yrange, 1), size(trange, 1), size(rrange, 1), size(srange, 1))
     tmp = Network_qse.qse_initial_guess(a,trange[1])
-    sp = Network_qse.StepParameter(-10,10,50)
+    sp = Network_qse.StepParameter(-50,50,30)
     l_t = size(trange,1)
     l_y = size(yrange,1)
     l_r = size(rrange,1)
     l_s = size(srange,1)
     for (l, q) in enumerate(srange)
-        tmp = Network_qse.qse_initial_guess(a,trange[1]; rho = rrange[1])
+        tmp = Network_qse.qse_initial_guess(a,trange[1], rho = rrange[1])
+        guess = tmp
         for (j, t) in enumerate(trange)
             for (k, r) in enumerate(rrange), (i,y) in enumerate(yrange)
                     th = Network_qse.ThermoProperties(t, r, y, q)
                     ff = Network_qse.Func(3, x -> Network_qse.qse_condition(x, th, a), x -> Network_qse.df_qse_condition(x,th,a), false)
                     any(isnan.(tmp)) ? tmp = Network_qse.qse_initial_guess(a,t) : nothing
                     tmp = Network_qse.MultiNewtonRaphson(tmp, ff, th, a, sp)
+		                println("is it nan\t",tmp)
+                    if any(isnan,tmp) 
+		                    println("guess\t", guess,typeof(guess))
+			                  f_tilde(x::Array{Float64,1}) = Network_qse.qse_condition_scalar(x, th, a)
+			                  res_optim = optimize(f_tilde, guess,NelderMead())
+                			  tmp = Optim.minimizer(res_optim)
+		                    println("result: ",tmp,typeof(tmp))
+                			  println("converged?\t",Optim.converged(res_optim),"\t",LinearAlgebra.norm2(Network_qse.qse_condition(tmp,th,a))) 
+                    end  
+		    println("A============")
                     x_nse, x_qse = Network_qse.x_i_QSE(tmp, th, a)
-                    res_mu[:,i,j,k,l] = tmp
+		    println("B============")
+                  res_mu[:,i,j,k,l] = tmp
+		    println("C============")
                     res[:,i,j,k,l] = vcat(x_nse,x_qse)
+		    println("D============")
                     println("sum X: ",sum(res[:,i,j,k,l]), "   sum X_cl: ", sum(x_qse))
+		    println("E============")
                     println("y:    ", y, "   T:    ", t, " ", " r:     ",r, "   sum X_cl: ", 1.0 - 10.0^(srange[l]))
+		    println("F============")
             end
         end
     end
@@ -198,23 +221,7 @@ function solve_QSE(yrange::Array{Float64,1}, trange::Array{Float64,1}, rrange::A
         write(f, "# y-range $(size(yrange)), T-range $(size(trange)), rho-range $(size(rrange)),  s-range $(size(srange))\n")
         writedlm(f, [yrange, "\n",  trange, "\n", rrange, "\n", 1.0 .- 10.0.^(srange)])
     end
-    return res, 1.0 .- 10.0.^(srange)
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 end
