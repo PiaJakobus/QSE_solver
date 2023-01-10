@@ -19,6 +19,6 @@ load data in variable with load("data.jld")["data"]
 y-range, T-range
 
 
-![](demo/x_cl_evol_20.webm)
+![](demo/demo.gif)
 
 
