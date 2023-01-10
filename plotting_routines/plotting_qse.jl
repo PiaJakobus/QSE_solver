@@ -181,6 +181,17 @@ col = distinguishable_colors(size(a,1), [RGB(1,1,1), RGB(0,0,0)], dropseed=true)
 shuffle!(col)
 
 
+
+
+params_qse = load("output/ye/QSE_params.jld");
+qse = load("output/ye/QSE_table.jld")["data"];
+cl_qse = params_qse["srange"]
+yrange = params_qse["yrange"];
+rrange = params_qse["rrange"];
+trange = params_qse["trange"];
+srange = params_qse["srange"]
+nse = load("output/ye/NSE_table.jld")["data"]
+
 """
 This plots X_i vs Y_e as evolution of temperature at constant rho,cluster 
 """
@@ -240,9 +251,21 @@ animY = @animate for i ∈ reverse(2:size(trange,1)) # timeframes T
 
     end
 end
-gif(animY, "output/t_evol_qse.mp4",fps=12)
+gif(animY, "output/ye.mp4",fps=12)
 
 
+
+
+
+params_qse = load("output/ye/QSE_params.jld");
+qse = load("output/ye/QSE_table.jld")["data"]
+
+cl_qse = params_qse["srange"]
+yrange = params_qse["yrange"];
+rrange = params_qse["rrange"];
+trange = params_qse["trange"];
+srange = params_qse["srange"];
+nse = load("output/ye/NSE_table.jld")["data"]
 """
 This plots X_i vs temperature as evolution of electron fraction at constant rho, si-cluster!
 """
@@ -306,7 +329,7 @@ animT = @animate for i ∈ reverse(1:size(yrange,1)) # timeframes Y
         end 
     end
 end
-gif(animT, "output/temperature_evol_qse.mp4", fps = 7)
+gif(animT, "output/ye_xaxis.mp4", fps = 12)
 
 
 
@@ -316,22 +339,35 @@ gif(animT, "output/temperature_evol_qse.mp4", fps = 7)
 #col = cgrad(:roma, rev = true, size(a,1), categorical = false, scale = :exp)
 #col = cgrad(:tab20c, size(a,1), categorical = true, scale = :linear)
 ##col = shuffle(shuffle(Base.range(HSV(0,1,1), stop=HSV(-360,1,1),length=size(a,1))))
-#col = shuffle(shuffle(Base.range(HSV(0,1,1), stop=HSV(-360,1,1),length=size(a,1))))
+col = shuffle(shuffle(Base.range(HSV(0,1,1), stop=HSV(-360,1,1),length=size(a,1))))
 
-col = distinguishable_colors(size(a,1)-100, [RGB(1,1,1), RGB(0,0,0)], dropseed=true)
+col = distinguishable_colors(size(a,1), [RGB(1,1,1), RGB(0,0,0)], dropseed=true)
 
 shuffle!(col)
 shuffle!(col)
 
+
+
+
+params_qse = load("output/cluster/QSE_params.jld");
+qse = load("output/cluster/QSE_table.jld")["data"]
+
+cl_qse = params_qse["srange"]
+yrange = params_qse["yrange"];
+rrange = params_qse["rrange"];
+trange = params_qse["trange"];
+srange = params_qse["srange"];
+nse = load("output/cluster/NSE_table.jld")["data"]
 """
+CLUSTER 
 This plots X_i vs temperature as evolution of silicon cluster size at constant rho, Y_e and 
 shows NSE abundances (fixed) in the background. Good for showing differences QSE/NSE
 """
-animY = @animate for i ∈ reverse(1:size(cl_qse,1)-1) # timeframes T
+animCl = @animate for i ∈ reverse(1:size(cl_qse,1)) # timeframes T
     println(i)
     Plots.plot()
     if nse_on
-    for (k, el) in enumerate(a[1:end-2]) #zip(Iterators.countfrom(3), a[3:end])
+    for (k, el) in enumerate(a[1:end]) #zip(Iterators.countfrom(3), a[3:end])
         #println(k, el)
         ind = argmax(filter!(!isnan, nse[k,1,:,1]))
         if nse[k,1,:,1][ind] > 1e-3
@@ -357,9 +393,10 @@ animY = @animate for i ∈ reverse(1:size(cl_qse,1)-1) # timeframes T
     #annotate!(trange[40], 0.9, Plots.text(lpad(rpad(string(round(mean(cl_nse[i]); sigdigits = 2, base = 10)),4), 4), 19, "black"))
     #annotate!(trange[40], 0.7, Plots.text(lpad(rpad(string(round(cl_qse[i]/mean(cl_nse[i]); sigdigits = 2, base = 10)),4), 4), 19, "black"))
     ratio = cl_qse[i]/cl_nse[i]
-    annotate!(trange[32], 1.2, Plots.text(L"X_\textrm{Cl} = "*lpad(rpad(string(round(cl_qse[i]; sigdigits = 3, base = 10)),4), 1)*L"\,\,\,\,X_\textrm{Cl}/X^\textrm{NSE}_\textrm{Cl}: "*lpad(rpad(string(round(ratio; sigdigits = 3, base = 10)),4), 1), 19, "black"))
-    annotate!(trange[end-10], 1.2, Plots.text(L"\rho="*string(round(rrange[1]; sigdigits = 2, base = 10))*" g/cm³", 19, "black"))
-    annotate!(trange[5], 1.2, Plots.text(L"Y_\textrm{e}="*string(round(yrange[1]; sigdigits = 2, base = 10)), 19, "black"))
+    annotate!(trange[40], 1.2, Plots.text(L"X_\textrm{Cl} = "*lpad(rpad(string(round(cl_qse[i]; sigdigits = 5, base = 10)),4), 1), 19,"black"))
+#        annotate!(trange[32], 1.2, Plots.text(L"X_\textrm{Cl} = "*lpad(rpad(string(round(cl_qse[i]; sigdigits = 3, base = 10)),4), 1)*L"\,\,\,\,X_\textrm{Cl}/X^\textrm{NSE}_\textrm{Cl}: "*lpad(rpad(string(round(ratio; sigdigits = 3, base = 10)),4), 1), 19, "black"))
+    annotate!(trange[end-15], 1.2, Plots.text(L"\rho="*string(round(rrange[1]; sigdigits = 2, base = 10))*" g/cm³", 19, "black"))
+    annotate!(trange[20], 1.2, Plots.text(L"Y_\textrm{e}="*string(round(yrange[1]; sigdigits = 2, base = 10)), 19, "black"))
     #annotate!(trange[end - 5], 1.2*(qse[1,1,:,1, i]+qse[2,1,:,1, i]), Plots.text(L"n + p", 15, "red"))
     #annotate!(trange[end - 5], 1.2*(nse[1,1,:,1]+nse[2,1,:,1]),Plots.text(L"n + p", 15, "grey"))
     #np = argmax(filter!(!isnan, qse[1,1,:,1,i]+qse[2,1,:,1,i]))
@@ -374,7 +411,7 @@ animY = @animate for i ∈ reverse(1:size(cl_qse,1)-1) # timeframes T
             ylims = (1e-3, 1.5),
             yticks = ([1e-3, 1e-2, 1e-1, 1], ["10⁻³", "10⁻²", "10⁻¹", "1"]),
             size = (1920,1380),
-            xlabel = "T₉ [K]",
+            xlabel = "T [K]",
             ylabel = "Xᵢ",
             c = col[k],
             #marker = (:circle,2),
@@ -399,4 +436,4 @@ animY = @animate for i ∈ reverse(1:size(cl_qse,1)-1) # timeframes T
     end
 end
 
-gif(animY, "output/x_cl_evol_2.mp4", fps = 9)
+gif(animCl, "output/cluster.mp4", fps = 18)

@@ -1,4 +1,5 @@
 using Colors
+using Plots
 using Random 
 using RecipesBase
 using LaTeXStrings

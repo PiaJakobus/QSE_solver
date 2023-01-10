@@ -27,5 +27,6 @@ y-range, T-range
 ![](demo/demo1.gif)
 ## Example output for varying electron fraction 
 ![](demo/demo2.gif)
+![](demo/demo3.gif)
 
 
