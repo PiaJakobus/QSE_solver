@@ -11,14 +11,16 @@ Hix, W. Raphael, and F-K. Thielemann. "Silicon Burning I: Neutronization and the
 
 Hix, W. Raphael, and Friedrich-Karl Thielemann. "Silicon burning. II. Quasi-equilibrium and explosive burning." The Astrophysical Journal 511.2 (1999): 862.
 
-This directory also contains plotting routines in /plotting_routines which can be used as a template for plotting in Julia 
+This directory also contains plotting routines in /plotting_routines for the animations below which can be used as a template for plotting in Julia 
  
 Notes:
 cgs units - rho = const = 1.0e7 g/cm3
 load data in variable with load("data.jld")["data"]
 y-range, T-range
 
-
-![](demo/demo.gif)
+# Example output for varying the silicon cluster size
+![](demo/demo1.gif)
+# Example output for varying electron fraction 
+![](demo/demo2.gif)
 
 
