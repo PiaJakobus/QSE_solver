@@ -1,4 +1,5 @@
 Pia Jakobus (2020) 
+
 This code computes abundances in statistical partial equilibrium
 
 The code was implemented based on the theory by  
@@ -14,8 +15,11 @@ Hix, W. Raphael, and Friedrich-Karl Thielemann. "Silicon burning. II. Quasi-equi
 This directory also contains plotting routines in /plotting_routines for the animations below which can be used as a template for plotting in Julia 
  
 Notes:
+
 cgs units - rho = const = 1.0e7 g/cm3
+
 load data in variable with load("data.jld")["data"]
+
 y-range, T-range
 
 # DEMO
