@@ -179,6 +179,7 @@ function solve_QSE(yrange::Array{Float64,1}, trange::Array{Float64,1}, rrange::A
     l_y = size(yrange,1)
     l_r = size(rrange,1)
     l_s = size(srange,1)
+    flag = "Newton-Raphson"
     for (l, q) in enumerate(srange)
         tmp = Network_qse.qse_initial_guess(a,trange[1], rho = rrange[1])
         guess = tmp
@@ -186,28 +187,25 @@ function solve_QSE(yrange::Array{Float64,1}, trange::Array{Float64,1}, rrange::A
             for (k, r) in enumerate(rrange), (i,y) in enumerate(yrange)
                     th = Network_qse.ThermoProperties(t, r, y, q)
                     ff = Network_qse.Func(3, x -> Network_qse.qse_condition(x, th, a), x -> Network_qse.df_qse_condition(x,th,a), false)
-                    any(isnan.(tmp)) ? tmp = Network_qse.qse_initial_guess(a,t) : nothing
+  println(any(isnan.(tmp) .|| isinf.(tmp)))
+                    any(isnan.(tmp) .|| isinf.(tmp)) ? tmp = Network_qse.qse_initial_guess(a,t,r) : nothing
                     tmp = Network_qse.MultiNewtonRaphson(tmp, ff, th, a, sp)
 		                println("is it nan\t",tmp)
                     if any(isnan,tmp) 
+                        flag = "NelderMead"
 		                    println("guess\t", guess,typeof(guess))
 			                  f_tilde(x::Array{Float64,1}) = Network_qse.qse_condition_scalar(x, th, a)
 			                  res_optim = optimize(f_tilde, guess,NelderMead())
                 			  tmp = Optim.minimizer(res_optim)
 		                    println("result: ",tmp,typeof(tmp))
-                			  println("converged?\t",Optim.converged(res_optim),"\t",LinearAlgebra.norm2(Network_qse.qse_condition(tmp,th,a))) 
+                			  println("converged?\t",Optim.converged(res_optim),"\t Minimum\t",Optim.minimum(res_optim),"\t 2-norm\t",LinearAlgebra.norm2(Network_qse.qse_condition(tmp,th,a))) 
                     end  
-		    println("A============")
+                    flag = "Newton Raphson"
                     x_nse, x_qse = Network_qse.x_i_QSE(tmp, th, a)
-		    println("B============")
-                  res_mu[:,i,j,k,l] = tmp
-		    println("C============")
+                    res_mu[:,i,j,k,l] = tmp
                     res[:,i,j,k,l] = vcat(x_nse,x_qse)
-		    println("D============")
                     println("sum X: ",sum(res[:,i,j,k,l]), "   sum X_cl: ", sum(x_qse))
-		    println("E============")
                     println("y:    ", y, "   T:    ", t, " ", " r:     ",r, "   sum X_cl: ", 1.0 - 10.0^(srange[l]))
-		    println("F============")
             end
         end
     end

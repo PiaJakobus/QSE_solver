@@ -186,7 +186,6 @@ function qse_condition_scalar(μ::Array{Float64,1}, th::ThermoProperties,
         sol[1] = log(res[1] + res_si[1])
         #println(res[1], res_si[1])
         sol[3] = log(res_si[1] / th.x_qse)
-	println("test scalar\t",μ,"\t",sol[1]^2 + sol[2]^2 + sol[3]^2)
         return LinearAlgebra.norm2(sol)
 end
 
