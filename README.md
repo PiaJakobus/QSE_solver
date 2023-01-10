@@ -14,11 +14,11 @@ Hix, W. Raphael, and Friedrich-Karl Thielemann. "Silicon burning. II. Quasi-equi
 This directory also contains plotting routines in /plotting_routines which can be used as a template for plotting in Julia 
  
 Notes:
-# cgs units - rho = const = 1.0e7 g/cm3
-# load data in variable with load("data.jld")["data"]
-# y-range, T-range
+cgs units - rho = const = 1.0e7 g/cm3
+load data in variable with load("data.jld")["data"]
+y-range, T-range
 
 
-![Alt text](demo/x_cl_evol_20.webm)
+![](demo/x_cl_evol_20.webm)
 
 
