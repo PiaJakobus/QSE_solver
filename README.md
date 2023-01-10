@@ -18,9 +18,10 @@ cgs units - rho = const = 1.0e7 g/cm3
 load data in variable with load("data.jld")["data"]
 y-range, T-range
 
-# Example output for varying the silicon cluster size
+# DEMO
+## Example output for varying the silicon cluster size
 ![](demo/demo1.gif)
-# Example output for varying electron fraction 
+## Example output for varying electron fraction 
 ![](demo/demo2.gif)
 
 
