@@ -27,6 +27,7 @@ y-range, T-range
 ![](demo/demo1.gif)
 ## Example output for varying electron fraction 
 ![](demo/demo2.gif)
+## Example output for varying temperature 
 ![](demo/demo3.gif)
 
 
