@@ -1,4 +1,9 @@
-
+using Colors
+using Plots
+using Random
+using RecipesBase
+using LaTeXStrings
+using JLD2
 a = Network_qse.extract_partition_function()
 
 
@@ -15,12 +20,12 @@ rrange = params_qse["rrange"]
 
 
 # Julia: fl__ -> x_i, ye, t, rho, s
-AexNse(temp::Int64) = sum([nse[i,1,temp,1] * a[i].A for i in Network_qse.find_el("C12", a):size(a,1)])
-ZexNse(temp::Int64) = sum([nse[i,1,temp,1,1] * a[i].Z for i in Network_qse.find_el("C12", a):size(a,1)])
+AexNse(temp::Int64) = sum([nse[i,1,temp,1] * a[i].A for i in Network_qse.find_el("C12", a):size(a,1)-1])
+ZexNse(temp::Int64) = sum([nse[i,1,temp,1,1] * a[i].Z for i in Network_qse.find_el("C12", a):size(a,1)-1])
 
 
-AexQse(ye) = sum([qse[i,ye,1,1,5] * a[i].A for i in Network_qse.find_el("C12", a):size(a,1)])
-ZexQse(s) = sum([qse[i,10,1,1,s] * a[i].Z for i in Network_qse.find_el("C12", a):size(a,1)])
+AexQse(temp,s) = sum([qse[i,1,temp,1,s] * a[i].A for i in Network_qse.find_el("C12", a):size(a,1)-1])
+ZexQse(temp,s) = sum([qse[i,1,temp,1,s] * a[i].Z for i in Network_qse.find_el("C12", a):size(a,1)-1])
 
 Plots.plot(yrange,ZexQse.(1:size(yrange, 1)),color=:red)
 Plots.plot!(cl_qse,ZexQse.(1:size(cl_qse,1), size(cl_qse,1)),color=:red)
@@ -28,23 +33,10 @@ Plots.plot!(yrange,AexQse.(1:size(trange, 1), 2),color=:blue)
 Plots.plot!(yrange,AexQse.(1:size(trange, 1), size(cl_qse,1)),color=:blue)
 
 
-p = Plots.plot(trange, cl_nse, label = "NSE", axis = "T₉", yaxis = "Clustersize", xaxis=:flip,legend = :bottomright, yscale =:log10)
-hline!([cl_qse[1], cl_qse[end]], fillrange=[cl_qse[1] cl_qse[end]], alpha = 0.2,label = "QSE", axis = "T₉", yaxis = "Clustersize", xaxis=:flip)
-Plots.savefig(p,"../Network_qse_run1/NSE_higher_QSE/logScale/clustersize_new.pdf")
 
-
-p = Plots.plot(trange, AexNse.(1:size(trange, 1)), label = "<A> NSE", linestyle = :dash, c = :blue,axis = "T₉", yaxis = "<Z>, <A>", xaxis=:flip, legend=:bottomleft)
-plot!(trange, AexQse.(1:size(trange, 1), size(cl_qse,1)), label = "<A> QSE", c = :blue, axis = "T₉", yaxis = "<Z>, <A>", xaxis=:flip, legend=:bottomleft)
-plot!(trange, ZexNse.(1:size(trange, 1)), label = "<Z> NSE", linestyle = :dash, c = :red, axis = "T₉", yaxis = "<Z>, <A>", xaxis=:flip, legend=:bottomleft)
-plot!(trange, ZexQse.(1:size(trange, 1), size(cl_qse,1)), label = "<Z> QSE", c = :red, axis = "T₉", yaxis = "<Z>, <A>", xaxis=:flip, legend=:bottomleft)
-plot!([trange trange], [ZexQse.(1:size(trange, 1), 3) ZexQse.(1:size(trange, 1), size(cl_qse,1))],  label = :false, fillrange=[ZexQse.(1:size(trange, 1), size(cl_qse,1)) ZexQse.(1:size(trange, 1), 2)], fillalpha=:0.1, color =:red)
-plot!([trange trange], [AexQse.(1:size(trange, 1), 2) AexQse.(1:size(trange, 1), size(cl_qse,1))],  label = :false, fillrange=[AexQse.(1:size(trange, 1), size(cl_qse,1)) AexQse.(1:size(trange, 1), 2)], fillalpha=:0.1, color =:blue)
-Plots.savefig("../Network_qse_run1/NSE_higher_QSE/logScale12/compare_below.png")
-Plots.savefig("../confirmation/average.pdf")
-
-cl_qse[end]
-
-
+p = Plots.plot(trange, cl_nse, label = "NSE", axis = "T", yaxis = "Clustersize", xaxis=:flip,legend = :bottomright)
+hline!([cl_qse[1], cl_qse[end]], fillrange=[cl_qse[1] cl_qse[end]], alpha = 0.2,label = "QSE", axis = "T (K)", yaxis = "Clustersize", xaxis=:flip)
+Plots.savefig(p,"clustersize_new.pdf")
 
 
 Plots.plot(trange, qse[Network_qse.find_el("Ni56", a), 1,:,1,end], xlabel = "T₉", ylabel = "Xᵢ",
@@ -72,7 +64,7 @@ end
 minimum(cl_nse)
 
 
-plot!(trange, qse[Network_qse.find_el("1n", a), 1,:,1,end], xlabel = "T₉", ylabel = "Xᵢ", linestyle = :dash, color = "blue",label = L"\mathrm{n\,\,QSE}", xaxis =:flip, yaxis = :log, ylims = (1e-10, 1))
+p = plot(trange, qse[Network_qse.find_el("1n", a), 1,:,1,end], xlabel = "T₉", ylabel = "Xᵢ", linestyle = :dash, color = "blue",label = L"\mathrm{n\,\,QSE}", xaxis =:flip, yaxis = :log, ylims = (1e-10, 1))
 Plots.plot!(trange, nse[Network_qse.find_el("1n", a), 1,:,1], xlabel = "T₉", ylabel = "Xᵢ", color = "blue", label = L"\mathrm{n\,\,NSE}", xaxis =:flip, yaxis = :log, ylims = (1e-10, 1))
 
 plot!(trange, qse[Network_qse.find_el("He4", a), 1,:,1,end], xlabel = "T₉", ylabel = "Xᵢ", linestyle = :dash, color = "green",label = L"\mathrm{He-4\,\,QSE}", xaxis =:flip, yaxis = :log, ylims = (1e-10, 1))
@@ -193,7 +185,7 @@ srange = params_qse["srange"]
 nse = load("output/ye/NSE_table.jld")["data"]
 
 """
-This plots X_i vs Y_e as evolution of temperature at constant rho,cluster 
+This plots X_i vs Y_e as evolution of temperature at constant rho,cluster
 """
 animY = @animate for i ∈ reverse(2:size(trange,1)) # timeframes T
     Plots.plot()
@@ -235,7 +227,7 @@ animY = @animate for i ∈ reverse(2:size(trange,1)) # timeframes T
         if nse[k,:,i,1][ind_nse] > 0.01
             plot!(yrange, nse[k,:,i,1],
             linewidth = 1,
-            linestyle=:dash, 
+            linestyle=:dash,
             label = false,
             c="grey")
             x,y = species_str(a[k])
@@ -246,14 +238,22 @@ animY = @animate for i ∈ reverse(2:size(trange,1)) # timeframes T
                 annotate!(yrange[ind_nse], 1.2*nse[k,:,i,1][ind_nse],
                 Plots.text(L"{}^{%$y}\!\textrm{%$x}", 10, "grey"))
             end
-        end 
-        end 
+        end
+        end
 
     end
+    Plots.savefig("output/save_as_pdfs/ye_$i.pdf")
 end
 gif(animY, "output/ye.mp4",fps=12)
 
 
+
+plot(yrange,qse[2,:,1,1,1],yscale =:log10)
+plot!(yrange,qse[1,:,1,1,1],yscale =:log10)
+plot!(yrange,qse[Network_qse.find_el("He4", a),:,1,1,1],yscale =:log10)
+plot(yrange,nse[2,:,1,1,1],yscale =:log10)
+plot!(yrange,nse[1,:,1,1,1],yscale =:log10)
+plot!(yrange,nse[Network_qse.find_el("He4", a),:,1,1,1],yscale =:log10)
 
 
 
@@ -314,7 +314,7 @@ animT = @animate for i ∈ reverse(1:size(yrange,1)) # timeframes Y
         if nse[k,i,:][ind_nse] > 0.01
             plot!(trange, nse[k,i,:,1],
             linewidth = 1,
-            linestyle=:dash, 
+            linestyle=:dash,
             label = false,
             c="grey")
             x,y = species_str(a[k])
@@ -325,9 +325,10 @@ animT = @animate for i ∈ reverse(1:size(yrange,1)) # timeframes Y
                 annotate!(trange[ind_nse], 1.2*nse[k,i,:,1][ind_nse],
                 Plots.text(L"{}^{%$y}\!\textrm{%$x}", 10, "grey"))
             end
-        end 
-        end 
+        end
+        end
     end
+    Plots.savefig("output/save_as_pdfs/ye_xaxis/ye_xaxis_$i.pdf")
 end
 gif(animT, "output/ye_xaxis.mp4", fps = 12)
 
@@ -341,7 +342,7 @@ gif(animT, "output/ye_xaxis.mp4", fps = 12)
 ##col = shuffle(shuffle(Base.range(HSV(0,1,1), stop=HSV(-360,1,1),length=size(a,1))))
 col = shuffle(shuffle(Base.range(HSV(0,1,1), stop=HSV(-360,1,1),length=size(a,1))))
 
-col = distinguishable_colors(size(a,1), [RGB(1,1,1), RGB(0,0,0)], dropseed=true)
+col = distinguishable_colors(size(a,1), [HSV(0,1,1), RGB(1,1,0)], dropseed=true)
 
 shuffle!(col)
 shuffle!(col)
@@ -350,29 +351,31 @@ shuffle!(col)
 
 
 params_qse = load("output/cluster/QSE_params.jld");
+params_nse = load("output/cluster/NSE_params.jld");
 qse = load("output/cluster/QSE_table.jld")["data"]
-
+nse_on = true
 cl_qse = params_qse["srange"]
 yrange = params_qse["yrange"];
 rrange = params_qse["rrange"];
 trange = params_qse["trange"];
 srange = params_qse["srange"];
 nse = load("output/cluster/NSE_table.jld")["data"]
+cl_nse = params_nse["srange"]
 """
-CLUSTER 
-This plots X_i vs temperature as evolution of silicon cluster size at constant rho, Y_e and 
+CLUSTER
+This plots X_i vs temperature as evolution of silicon cluster size at constant rho, Y_e and
 shows NSE abundances (fixed) in the background. Good for showing differences QSE/NSE
 """
 animCl = @animate for i ∈ reverse(1:size(cl_qse,1)) # timeframes T
     println(i)
     Plots.plot()
     if nse_on
-    for (k, el) in enumerate(a[1:end]) #zip(Iterators.countfrom(3), a[3:end])
+    for (k, el) in enumerate(a[1:end-1]) #zip(Iterators.countfrom(3), a[3:end])
         #println(k, el)
         ind = argmax(filter!(!isnan, nse[k,1,:,1]))
         if nse[k,1,:,1][ind] > 1e-3
             plot!(trange, nse[k, 1, :, 1], linestyle=:dash,label = nothing, color = "grey", yaxis = :log)
-            x,y = species_str(a[k])
+            x,y = species_str(a[k+1])
             if nse[k,1,:,1][ind] > 1e-3 && nse[k,1,:,1][ind] < 1e-2
                 annotate!(trange[ind], 1.2*nse[k,1,:,1][ind],
                 Plots.text(L"{}^{%$y}\!\textrm{%$x}", 15, "grey"))
@@ -384,8 +387,8 @@ animCl = @animate for i ∈ reverse(1:size(cl_qse,1)) # timeframes T
     end
     #Plots.plot!(trange, nse[1,1,:,1]+nse[2,1,:,1], c = "red", label = "NSE p + n", ls=:dot,legendfontsize=12)
     ind = argmax(filter!(!isnan, qse[1,1,:,1,i]))
-    end 
-    #Plots.plot!(trange, qse[1,1,:,1, i]+qse[2,1,:,1, i], c = "red")  
+    end
+    #Plots.plot!(trange, qse[1,1,:,1, i]+qse[2,1,:,1, i], c = "red")
     #fg_legend = :false,label = "QSE p + n",legendfontsize=12,legend=:topleft)
     #annotate!(trange[50], 1.2, Plots.text(L"\log\,(1 - \mathrm{X}_{\mathrm{Cl}}) \;\; = ", 19, "black"))
     #annotate!(trange[50], 0.9, Plots.text(L"\overline{\mathrm{X}}_{\mathrm{NSE}} \;\;\;\;\; = ", 19, "black"))
@@ -400,7 +403,7 @@ animCl = @animate for i ∈ reverse(1:size(cl_qse,1)) # timeframes T
     #annotate!(trange[end - 5], 1.2*(qse[1,1,:,1, i]+qse[2,1,:,1, i]), Plots.text(L"n + p", 15, "red"))
     #annotate!(trange[end - 5], 1.2*(nse[1,1,:,1]+nse[2,1,:,1]),Plots.text(L"n + p", 15, "grey"))
     #np = argmax(filter!(!isnan, qse[1,1,:,1,i]+qse[2,1,:,1,i]))
-    for (k, el) in enumerate(a[1:end])#zip(Iterators.countfrom(3), a[3:end]) 
+    for (k, el) in enumerate(a[1:end-1])#zip(Iterators.countfrom(3), a[3:end])
         ind = argmax(filter!(!isnan, qse[k,1,:,1,i]))
         if qse[k,1,:,1,i][ind] > 1e-3
             #plot!(nse,i, k, yrange, "Yₑ", all[k,:,i,1], colT[rand(1:30)], marker = (:circle,2),
@@ -422,7 +425,7 @@ animCl = @animate for i ∈ reverse(1:size(cl_qse,1)) # timeframes T
             ytickfont = font(16),
             thickness_scaling = 1.3,
             margin=5Plots.mm)
-            x,y = species_str(a[k])
+            x,y = species_str(a[k+1])
             if qse[k,1,:,1, i][ind] > 1e-3 && qse[k,1,:,1, i][ind] < 1e-2
                 #annotate!(trange[np], 1.2*qse[k,1,:,1, i][np], Plots.text("QSE p+n", 15, "red"))
                 annotate!(trange[ind], 1.2*qse[k,1,:,1, i][ind],
@@ -434,6 +437,22 @@ animCl = @animate for i ∈ reverse(1:size(cl_qse,1)) # timeframes T
             end
         end
     end
+    Plots.savefig("output/save_as_pdfs/cluster/cluster_$i.pdf")
 end
 
 gif(animCl, "output/cluster.mp4", fps = 18)
+
+
+p = Plots.plot(trange, AexNse.(1:size(trange, 1)), label = "<A> NSE", linestyle = :dash, c = :blue,axis = "T", yaxis = "<Z>, <A>", xaxis=:flip, legend=:bottomleft)
+plot!(trange, ZexNse.(1:size(trange, 1)), label = "<Z> NSE", linestyle = :dash, c = :red, axis = "T (K)", yaxis = "<Z>, <A>", xaxis=:flip, legend=:bottomleft)
+
+plot!(trange, AexQse.(1:size(trange, 1),99), label = "<A> QSE", c = :blue, axis = "T (K)", yaxis = "<Z>, <A>", xaxis=:flip, legend=:bottomleft)
+plot!(trange, ZexQse.(1:size(trange,1),99), label = "<Z> QSE", c = :red, axis = "T (K)", yaxis = "<Z>, <A>", xaxis=:flip, legend=:bottomleft)
+
+
+plot!(trange, AexQse.(1:size(trange, 1),2), label = "<A> QSE", c = :blue, axis = "T (K)", yaxis = "<Z>, <A>", xaxis=:flip, legend=:bottomleft)
+plot!(trange, ZexQse.(1:size(trange,1),3), label = "<Z> QSE", c = :red, axis = "T (K)", yaxis = "<Z>, <A>", xaxis=:flip, legend=:bottomleft)
+plot!([trange trange], [ZexQse.(1:size(trange, 1), 3) ZexQse.(1:size(trange, 1), size(cl_qse,1))],  label = :false, fillrange=[ZexQse.(1:size(trange, 1), size(cl_qse,1)) ZexQse.(1:size(trange, 1), 2)], fillalpha=:0.1, color =:red)
+plot!([trange trange], [AexQse.(1:size(trange, 1), 2) AexQse.(1:size(trange, 1), size(cl_qse,1))],  label = :false, fillrange=[AexQse.(1:size(trange, 1), size(cl_qse,1)) AexQse.(1:size(trange, 1), 2)], fillalpha=:0.1, color =:blue)
+Plots.savefig("compare_below.pdf")
+Plots.savefig("../confirmation/average.pdf")

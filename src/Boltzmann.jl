@@ -19,7 +19,7 @@ index: 438 or 863 or 762
 inverse of saha equation with only one species
 and μₚ = μₙ. returns μ
 """
-function initial_guess(a::Array{AtomicProperties, 1}, ap_ni56 = (k -> a[find_el(k, a)])("Fe56"); 
+function initial_guess(a::Array{AtomicProperties, 1}, ap_ni56 = (k -> a[find_el(k, a)])("Fe56");
 T = 3.5e9, rho = 1e7)
     scr2 = rho / (m_u * ap_ni56.A)
     λ3 = sqrt(2.0 * pi * k_B * T * ap_ni56.A * m_u / hh^2.0)^3.0
@@ -133,7 +133,7 @@ Mass conservation and charge neutrality
 log (∑ᵢXᵢ),  log(∑ᵢ(Zᵢ/Aᵢ)Xᵢ / y), log (∑ⱼ Xⱼ) where
 j loops over the heavy Cluster
 """
-function qse_condition(μ::Array{Float64,1}, th::ThermoProperties,
+function qse_condition(μ, th::ThermoProperties,
             ap::Array{AtomicProperties, 1}, E_si = -236.533, i_c12 = find_el("C12", ap))
         res = zeros(Real,2) # Real here for AtoDiff to work
         res_si = zeros(Real, 2)
@@ -157,12 +157,11 @@ function qse_condition(μ::Array{Float64,1}, th::ThermoProperties,
         sol[1] = log(res[1] + res_si[1])
         #println(res[1], res_si[1])
         sol[3] = log(res_si[1] / th.x_qse)
-	println("test\t",μ,"\t", sol)
         return sol
 end
 
 
-function qse_condition_scalar(μ::Array{Float64,1}, th::ThermoProperties,
+function qse_condition_scalar(μ, th::ThermoProperties,
             ap::Array{AtomicProperties, 1}, E_si = -236.533, i_c12 = find_el("C12", ap))
         res = zeros(Real,2) # Real here for AtoDiff to work
         res_si = zeros(Real, 2)
@@ -186,7 +185,7 @@ function qse_condition_scalar(μ::Array{Float64,1}, th::ThermoProperties,
         sol[1] = log(res[1] + res_si[1])
         #println(res[1], res_si[1])
         sol[3] = log(res_si[1] / th.x_qse)
-        return LinearAlgebra.norm2(sol)
+        return sol[1]^2 + sol[2]^2 + sol[3]^2 #LinearAlgebra.norm2(sol)
 end
 
 

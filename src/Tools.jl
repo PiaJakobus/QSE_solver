@@ -17,7 +17,7 @@ function find_el(el::String, ap::Any)
     filter(i -> (ap[i].name == el), 1:size(ap,1))[1]
 end
 
-function inv_3x3(m::Array{Float64,2})
+function inv_3x3(m)
     det = m[1,1] * (m[2,2] * m[3,3] - m[2,3] * m[3,2]) -
           m[1,2] * (m[2,1] * m[3,3] - m[2,3] * m[3,1]) +
           m[1,3] * (m[2,1] * m[3,2] - m[2,2] * m[3,1])
@@ -41,24 +41,27 @@ props contains parameters for NR. For NSE a min/max value of [-50,50] and
 alpha = 30 is recommended. For QSE min/max = [-10,10] and alpha = 50
 seems to run stable
 """
-function MultiNewtonRaphson(x::Array{Float64,1}, func::Func, th::ThermoProperties, ap::Array{AtomicProperties, 1}, props::StepParameter)
+function MultiNewtonRaphson(x::Array{Float64,1}, func::Func, th::ThermoProperties, ap::Array{AtomicProperties, 1}, props::StepParameter;linsys=false)
     zaehler = 0
     ϵ = 1.0
-    while (abs(ϵ) > 1e-12) && (zaehler < 10000)
+    while (abs(ϵ) > 1e-4) && (zaehler < 10000)
         f = func.f(x)
-	#println("--- i\t",zaehler,"\n")
-	#println("func\t",f,"\n")
-	#println("test")
-        inv = func.inv(x)
-        #println("det\t", m,pinv(m))
         α = props.alpha
         maxi = props.max
         mini = props.min
-        x = x .- min.(1, zaehler/α) * max.(min.(inv * f, maxi), mini)
-        #println("guess\t",x,"\t","error ",ϵ)
+        step = 1.0
+        # can be more stable at low T to solve linear system instead of inverting matrix ...
+        if linsys == true
+            step = solve(LinearProblem(func.df(x),func.f(x)))
+        else
+            inv = func.inv(x)
+            step =  inv * f
+        end
+        x = x .- min.(1, zaehler/α) * max.(min.(step, maxi), mini)
         ϵ = LinearAlgebra.norm2(f)
         zaehler += 1
     end
+    println("res: ",x)
     return x
 
 """
